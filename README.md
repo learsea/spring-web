@@ -1,1 +1,1 @@
-spring webmvc+mybatis+redis+rabbitmq+fdfs¿Í»§¶Ë+websocket£¨websocket±ØĞëÓÃtomcatÔËĞĞ£©
+spring webmvc+mybatis+redis+rabbitmq+fdfså®¢æˆ·ç«¯+websocketï¼ˆwebsocketå¿…é¡»ç”¨tomcatè¿è¡Œï¼‰
