@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+
+    <bean id="connectionFactory"
+          class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">
+        <constructor-arg value="${rabbitmq.host}"/>
+        <property name="username" value="${rabbitmq.username}"/>
+        <property name="password" value="${rabbitmq.password}"/>
+    </bean>
+    <rabbit:template id="pushOrderTemplate" connection-factory="connectionFactory" routing-key="delayPushOrder"/>
+    <!--自动声明缺失的queue-->
+    <rabbit:admin connection-factory="connectionFactory"/>
+    <!--声明一个持久化延迟队列（单位毫秒）。如果需要发送延迟消息，则发送到该队列。-->
+    <rabbit:queue name="delayPushOrder" durable="true">
+        <rabbit:queue-arguments>
+            <entry key="x-message-ttl">
+                <value type="java.lang.Long">72000</value>
+            </entry>
+            <entry key="x-dead-letter-exchange" value=""/>
+            <entry key="x-dead-letter-routing-key" value="pushOrder"/>
+        </rabbit:queue-arguments>
+    </rabbit:queue>
+
+    <!--声明一个持久化队列，延迟队列中的消息到期后发送到该队列中。如果不需要延迟，则直接发送消息到该队列-->
+    <rabbit:queue name="pushOrder" durable="true"/>
+
+    <!--消息监听。注意，监听的是正常队列pushOrder，而不是延迟队列delayPushOrder-->
+    <bean id="pushOrderListener" class="com.csy.webmvc.rabbitmq.pushOrderListener"/>
+    <rabbit:listener-container connection-factory="connectionFactory">
+        <rabbit:listener queues="pushOrder" ref="pushOrderListener" method="handle"/>
+    </rabbit:listener-container>
+</beans>
